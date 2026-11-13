@@ -1,0 +1,202 @@
+{
+  "entities": {
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Online or chamber doctor appointment with real-time serial token tracking, fee transparency, and pre-visit vitals.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated owner UID" },
+        "doctorId": { "type": "string", "description": "ID of the BMDC-verified specialist doctor" },
+        "doctorNameEn": { "type": "string", "description": "Doctor name in English" },
+        "doctorNameBn": { "type": "string", "description": "Doctor name in Bangla" },
+        "specialtyEn": { "type": "string", "description": "Specialty in English" },
+        "specialtyBn": { "type": "string", "description": "Specialty in Bangla" },
+        "hospitalNameEn": { "type": "string", "description": "Chamber/Hospital name in English" },
+        "hospitalNameBn": { "type": "string", "description": "Chamber/Hospital name in Bangla" },
+        "patientName": { "type": "string", "description": "Booked patient full name" },
+        "patientRelation": { "type": "string", "description": "Relation to account holder (Self, Father, Mother, etc.)" },
+        "appointmentDate": { "type": "string", "description": "Appointment date string (YYYY-MM-DD)" },
+        "timeSlot": { "type": "string", "description": "Selected chamber or online time slot" },
+        "consultationType": { "type": "string", "enum": ["CHAMBER", "VIDEO", "AUDIO_LOW_DATA"], "description": "Consultation mode" },
+        "serialNumber": { "type": "integer", "description": "Assigned chamber serial token number" },
+        "currentRunningSerial": { "type": "integer", "description": "Current live serial number running in chamber" },
+        "estimatedWaitMinutes": { "type": "integer", "description": "Estimated waiting time in minutes" },
+        "chamberStatus": { "type": "string", "enum": ["ON_TIME", "IN_CHAMBER", "DELAYED_20M", "IN_OT"], "description": "Live doctor chamber status" },
+        "feeBdt": { "type": "integer", "description": "Transparent consultation fee in BDT" },
+        "isFollowUp": { "type": "boolean", "description": "Whether this is a discounted follow-up/report-show visit" },
+        "paymentMethod": { "type": "string", "enum": ["BKASH", "NAGAD", "CHAMBER_CASH", "CARD"], "description": "Selected payment method" },
+        "paymentTrxId": { "type": "string", "description": "Verified payment transaction ID or chamber token" },
+        "symptomsSummary": { "type": "string", "description": "Pre-visit chief complaints and symptoms" },
+        "vitalsBp": { "type": "string", "description": "Pre-visit blood pressure reading" },
+        "vitalsTempF": { "type": "string", "description": "Pre-visit temperature reading in Fahrenheit" },
+        "status": { "type": "string", "enum": ["UPCOMING", "IN_QUEUE", "COMPLETED", "CANCELLED"], "description": "Appointment lifecycle status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation (FieldValue.serverTimestamp())" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update (FieldValue.serverTimestamp())" }
+      },
+      "required": [
+        "userId",
+        "doctorId",
+        "doctorNameEn",
+        "doctorNameBn",
+        "specialtyEn",
+        "specialtyBn",
+        "hospitalNameEn",
+        "hospitalNameBn",
+        "patientName",
+        "patientRelation",
+        "appointmentDate",
+        "timeSlot",
+        "consultationType",
+        "serialNumber",
+        "currentRunningSerial",
+        "estimatedWaitMinutes",
+        "chamberStatus",
+        "feeBdt",
+        "isFollowUp",
+        "paymentMethod",
+        "paymentTrxId",
+        "symptomsSummary",
+        "vitalsBp",
+        "vitalsTempF",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Prescription": {
+      "title": "Prescription",
+      "description": "Bilingual digital e-prescription (Rx) with Bangla/English dosage instructions, generic names, and lab discount coupon.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated owner UID" },
+        "appointmentId": { "type": "string", "description": "Associated appointment ID" },
+        "doctorNameEn": { "type": "string", "description": "Doctor name in English" },
+        "doctorNameBn": { "type": "string", "description": "Doctor name in Bangla" },
+        "specialtyEn": { "type": "string", "description": "Doctor specialty in English" },
+        "specialtyBn": { "type": "string", "description": "Doctor specialty in Bangla" },
+        "bmdcRegNo": { "type": "string", "description": "Verified BMDC registration number" },
+        "patientName": { "type": "string", "description": "Patient name" },
+        "patientAge": { "type": "integer", "description": "Patient age in years" },
+        "diagnosisEn": { "type": "string", "description": "Clinical diagnosis in English" },
+        "diagnosisBn": { "type": "string", "description": "Clinical diagnosis in Bangla" },
+        "medicinesSummaryEn": { "type": "string", "description": "Structured medicine dosage instructions in English" },
+        "medicinesSummaryBn": { "type": "string", "description": "Structured medicine dosage instructions in Bangla (1+0+1)" },
+        "adviceEn": { "type": "string", "description": "Clinical advice in English" },
+        "adviceBn": { "type": "string", "description": "Clinical advice in Bangla" },
+        "recommendedTests": { "type": "string", "description": "Recommended diagnostic investigations" },
+        "followUpDays": { "type": "integer", "description": "Recommended follow-up interval in days" },
+        "discountCouponCode": { "type": "string", "description": "Diagnostic lab 20% discount code" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation (FieldValue.serverTimestamp())" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update (FieldValue.serverTimestamp())" }
+      },
+      "required": [
+        "userId",
+        "appointmentId",
+        "doctorNameEn",
+        "doctorNameBn",
+        "specialtyEn",
+        "specialtyBn",
+        "bmdcRegNo",
+        "patientName",
+        "patientAge",
+        "diagnosisEn",
+        "diagnosisBn",
+        "medicinesSummaryEn",
+        "medicinesSummaryBn",
+        "adviceEn",
+        "adviceBn",
+        "recommendedTests",
+        "followUpDays",
+        "discountCouponCode",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FamilyMember": {
+      "title": "FamilyMember",
+      "description": "Family patient profile for booking serials on behalf of parents, children, or spouse.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated owner UID" },
+        "fullName": { "type": "string", "description": "Family member full name" },
+        "relationEn": { "type": "string", "description": "Relation in English (Self, Father, Mother, Child, Spouse)" },
+        "relationBn": { "type": "string", "description": "Relation in Bangla (নিজে, বাবা, মা, সন্তান, স্বামী/স্ত্রী)" },
+        "age": { "type": "integer", "description": "Age in years" },
+        "gender": { "type": "string", "description": "Gender" },
+        "bloodGroup": { "type": "string", "description": "Blood group (A+, B+, O+, AB+, etc.)" },
+        "chronicConditions": { "type": "string", "description": "Known chronic conditions (Diabetes, Hypertension, Asthma, None)" },
+        "phone": { "type": "string", "description": "Emergency contact phone number" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation (FieldValue.serverTimestamp())" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update (FieldValue.serverTimestamp())" }
+      },
+      "required": [
+        "userId",
+        "fullName",
+        "relationEn",
+        "relationBn",
+        "age",
+        "gender",
+        "bloodGroup",
+        "chronicConditions",
+        "phone",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RefundClaim": {
+      "title": "RefundClaim",
+      "description": "Instant zero-deduction bKash/Nagad escrow refund or stuck TrxID reconciliation record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated owner UID" },
+        "appointmentId": { "type": "string", "description": "Associated appointment ID or TrxID recovery key" },
+        "doctorNameEn": { "type": "string", "description": "Doctor name in English" },
+        "doctorNameBn": { "type": "string", "description": "Doctor name in Bangla" },
+        "claimType": { "type": "string", "enum": ["DOCTOR_NO_SHOW", "STUCK_MFS_TRX", "CALL_DROP_COMPENSATION", "CHAMBER_OVERDELAY"], "description": "Category of issue resolved" },
+        "paymentMethod": { "type": "string", "enum": ["BKASH", "NAGAD", "CHAMBER_CASH", "CARD"], "description": "Payment channel" },
+        "originalTrxId": { "type": "string", "description": "Original bKash/Nagad/Card TrxID" },
+        "refundReferenceId": { "type": "string", "description": "Instant reversal reference token" },
+        "refundAmountBdt": { "type": "integer", "description": "Full refunded amount in BDT" },
+        "deductionFeeBdt": { "type": "integer", "description": "Gateway deduction fee (strictly 0 BDT)" },
+        "reasonSummary": { "type": "string", "description": "Patient reason or reconciliation note" },
+        "resolutionStatus": { "type": "string", "enum": ["INSTANT_REFUNDED", "SERIAL_RESTORED", "FREE_RESLOT_ISSUED"], "description": "Automated resolution outcome" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation (FieldValue.serverTimestamp())" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update (FieldValue.serverTimestamp())" }
+      },
+      "required": [
+        "userId",
+        "appointmentId",
+        "doctorNameEn",
+        "doctorNameBn",
+        "claimType",
+        "paymentMethod",
+        "originalTrxId",
+        "refundReferenceId",
+        "refundAmountBdt",
+        "deductionFeeBdt",
+        "reasonSummary",
+        "resolutionStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/appointments/{appointmentId}": {
+      "schema": { "$ref": "#/entities/Appointment" },
+      "description": "User-scoped doctor appointments and live chamber serial queue trackers."
+    },
+    "/users/{userId}/prescriptions/{prescriptionId}": {
+      "schema": { "$ref": "#/entities/Prescription" },
+      "description": "User-scoped bilingual digital e-prescriptions (Rx)."
+    },
+    "/users/{userId}/family_members/{memberId}": {
+      "schema": { "$ref": "#/entities/FamilyMember" },
+      "description": "User-scoped family health profiles for multi-patient serial booking."
+    },
+    "/users/{userId}/refund_claims/{claimId}": {
+      "schema": { "$ref": "#/entities/RefundClaim" },
+      "description": "User-scoped instant 0%-deduction bKash/Nagad escrow refunds and TrxID recovery records."
+    }
+  }
+}

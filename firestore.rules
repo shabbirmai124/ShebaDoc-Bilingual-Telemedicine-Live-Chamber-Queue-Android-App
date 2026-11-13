@@ -1,0 +1,267 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint: Appointment
+    function isValidAppointment(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.doctorId is string && data.doctorId.size() >= 1 && data.doctorId.size() <= 100 &&
+             data.doctorNameEn is string && data.doctorNameEn.size() >= 1 && data.doctorNameEn.size() <= 150 &&
+             data.doctorNameBn is string && data.doctorNameBn.size() >= 1 && data.doctorNameBn.size() <= 200 &&
+             data.specialtyEn is string && data.specialtyEn.size() >= 1 && data.specialtyEn.size() <= 100 &&
+             data.specialtyBn is string && data.specialtyBn.size() >= 1 && data.specialtyBn.size() <= 150 &&
+             data.hospitalNameEn is string && data.hospitalNameEn.size() >= 1 && data.hospitalNameEn.size() <= 150 &&
+             data.hospitalNameBn is string && data.hospitalNameBn.size() >= 1 && data.hospitalNameBn.size() <= 200 &&
+             data.patientName is string && data.patientName.size() >= 1 && data.patientName.size() <= 120 &&
+             data.patientRelation is string && data.patientRelation.size() >= 1 && data.patientRelation.size() <= 60 &&
+             data.appointmentDate is string && data.appointmentDate.size() >= 1 && data.appointmentDate.size() <= 40 &&
+             data.timeSlot is string && data.timeSlot.size() >= 1 && data.timeSlot.size() <= 60 &&
+             data.consultationType is string && data.consultationType in ['CHAMBER', 'VIDEO', 'AUDIO_LOW_DATA'] &&
+             data.serialNumber is int && data.serialNumber >= 1 && data.serialNumber <= 500 &&
+             data.currentRunningSerial is int && data.currentRunningSerial >= 0 && data.currentRunningSerial <= 500 &&
+             data.estimatedWaitMinutes is int && data.estimatedWaitMinutes >= 0 && data.estimatedWaitMinutes <= 1440 &&
+             data.chamberStatus is string && data.chamberStatus in ['ON_TIME', 'IN_CHAMBER', 'DELAYED_20M', 'IN_OT'] &&
+             data.feeBdt is int && data.feeBdt >= 0 && data.feeBdt <= 50000 &&
+             data.isFollowUp is bool &&
+             data.paymentMethod is string && data.paymentMethod in ['BKASH', 'NAGAD', 'CHAMBER_CASH', 'CARD'] &&
+             data.paymentTrxId is string && data.paymentTrxId.size() >= 1 && data.paymentTrxId.size() <= 80 &&
+             data.symptomsSummary is string && data.symptomsSummary.size() <= 500 &&
+             data.vitalsBp is string && data.vitalsBp.size() <= 40 &&
+             data.vitalsTempF is string && data.vitalsTempF.size() <= 40 &&
+             data.status is string && data.status in ['UPCOMING', 'IN_QUEUE', 'COMPLETED', 'CANCELLED'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: Prescription
+    function isValidPrescription(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.appointmentId is string && data.appointmentId.size() >= 1 && data.appointmentId.size() <= 128 &&
+             data.doctorNameEn is string && data.doctorNameEn.size() >= 1 && data.doctorNameEn.size() <= 150 &&
+             data.doctorNameBn is string && data.doctorNameBn.size() >= 1 && data.doctorNameBn.size() <= 200 &&
+             data.specialtyEn is string && data.specialtyEn.size() >= 1 && data.specialtyEn.size() <= 100 &&
+             data.specialtyBn is string && data.specialtyBn.size() >= 1 && data.specialtyBn.size() <= 150 &&
+             data.bmdcRegNo is string && data.bmdcRegNo.size() >= 1 && data.bmdcRegNo.size() <= 60 &&
+             data.patientName is string && data.patientName.size() >= 1 && data.patientName.size() <= 120 &&
+             data.patientAge is int && data.patientAge >= 0 && data.patientAge <= 130 &&
+             data.diagnosisEn is string && data.diagnosisEn.size() >= 1 && data.diagnosisEn.size() <= 300 &&
+             data.diagnosisBn is string && data.diagnosisBn.size() >= 1 && data.diagnosisBn.size() <= 400 &&
+             data.medicinesSummaryEn is string && data.medicinesSummaryEn.size() >= 1 && data.medicinesSummaryEn.size() <= 1000 &&
+             data.medicinesSummaryBn is string && data.medicinesSummaryBn.size() >= 1 && data.medicinesSummaryBn.size() <= 1200 &&
+             data.adviceEn is string && data.adviceEn.size() <= 600 &&
+             data.adviceBn is string && data.adviceBn.size() <= 800 &&
+             data.recommendedTests is string && data.recommendedTests.size() <= 500 &&
+             data.followUpDays is int && data.followUpDays >= 0 && data.followUpDays <= 365 &&
+             data.discountCouponCode is string && data.discountCouponCode.size() >= 1 && data.discountCouponCode.size() <= 50 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: FamilyMember
+    function isValidFamilyMember(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120 &&
+             data.relationEn is string && data.relationEn.size() >= 1 && data.relationEn.size() <= 60 &&
+             data.relationBn is string && data.relationBn.size() >= 1 && data.relationBn.size() <= 100 &&
+             data.age is int && data.age >= 0 && data.age <= 130 &&
+             data.gender is string && data.gender.size() >= 1 && data.gender.size() <= 40 &&
+             data.bloodGroup is string && data.bloodGroup.size() >= 1 && data.bloodGroup.size() <= 20 &&
+             data.chronicConditions is string && data.chronicConditions.size() <= 300 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: RefundClaim (Enforces 0 BDT Gateway Deduction Guarantee)
+    function isValidRefundClaim(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.appointmentId is string && data.appointmentId.size() >= 1 && data.appointmentId.size() <= 128 &&
+             data.doctorNameEn is string && data.doctorNameEn.size() >= 1 && data.doctorNameEn.size() <= 150 &&
+             data.doctorNameBn is string && data.doctorNameBn.size() >= 1 && data.doctorNameBn.size() <= 200 &&
+             data.claimType is string && data.claimType in ['DOCTOR_NO_SHOW', 'STUCK_MFS_TRX', 'CALL_DROP_COMPENSATION', 'CHAMBER_OVERDELAY'] &&
+             data.paymentMethod is string && data.paymentMethod in ['BKASH', 'NAGAD', 'CHAMBER_CASH', 'CARD'] &&
+             data.originalTrxId is string && data.originalTrxId.size() >= 1 && data.originalTrxId.size() <= 80 &&
+             data.refundReferenceId is string && data.refundReferenceId.size() >= 1 && data.refundReferenceId.size() <= 80 &&
+             data.refundAmountBdt is int && data.refundAmountBdt >= 0 && data.refundAmountBdt <= 50000 &&
+             data.deductionFeeBdt is int && data.deductionFeeBdt == 0 &&
+             data.reasonSummary is string && data.reasonSummary.size() >= 1 && data.reasonSummary.size() <= 500 &&
+             data.resolutionStatus is string && data.resolutionStatus in ['INSTANT_REFUNDED', 'SERIAL_RESTORED', 'FREE_RESLOT_ISSUED'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      // User-scoped Appointments Collection
+      match /appointments/{appointmentId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(appointmentId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(appointmentId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'doctorId', 'doctorNameEn', 'doctorNameBn',
+                           'specialtyEn', 'specialtyBn', 'hospitalNameEn', 'hospitalNameBn',
+                           'patientName', 'patientRelation', 'appointmentDate', 'timeSlot',
+                           'consultationType', 'serialNumber', 'currentRunningSerial',
+                           'estimatedWaitMinutes', 'chamberStatus', 'feeBdt', 'isFollowUp',
+                           'paymentMethod', 'paymentTrxId', 'symptomsSummary', 'vitalsBp',
+                           'vitalsTempF', 'status', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'doctorId', 'doctorNameEn', 'doctorNameBn',
+                           'specialtyEn', 'specialtyBn', 'hospitalNameEn', 'hospitalNameBn',
+                           'patientName', 'patientRelation', 'appointmentDate', 'timeSlot',
+                           'consultationType', 'serialNumber', 'currentRunningSerial',
+                           'estimatedWaitMinutes', 'chamberStatus', 'feeBdt', 'isFollowUp',
+                           'paymentMethod', 'paymentTrxId', 'symptomsSummary', 'vitalsBp',
+                           'vitalsTempF', 'status', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidAppointment(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(appointmentId) &&
+                         isValidAppointment(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().doctorId == existing().doctorId &&
+                         incoming().createdAt == existing().createdAt &&
+                         !(existing().status in ['COMPLETED', 'CANCELLED']) &&
+                         (
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'currentRunningSerial', 'estimatedWaitMinutes', 'chamberStatus',
+                             'symptomsSummary', 'vitalsBp', 'vitalsTempF', 'status',
+                             'appointmentDate', 'timeSlot', 'consultationType', 'updatedAt'
+                           ])
+                         );
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(appointmentId);
+      }
+
+      // User-scoped Digital E-Prescriptions Collection
+      match /prescriptions/{prescriptionId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(prescriptionId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(prescriptionId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'appointmentId', 'doctorNameEn', 'doctorNameBn',
+                           'specialtyEn', 'specialtyBn', 'bmdcRegNo', 'patientName',
+                           'patientAge', 'diagnosisEn', 'diagnosisBn', 'medicinesSummaryEn',
+                           'medicinesSummaryBn', 'adviceEn', 'adviceBn', 'recommendedTests',
+                           'followUpDays', 'discountCouponCode', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'appointmentId', 'doctorNameEn', 'doctorNameBn',
+                           'specialtyEn', 'specialtyBn', 'bmdcRegNo', 'patientName',
+                           'patientAge', 'diagnosisEn', 'diagnosisBn', 'medicinesSummaryEn',
+                           'medicinesSummaryBn', 'adviceEn', 'adviceBn', 'recommendedTests',
+                           'followUpDays', 'discountCouponCode', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidPrescription(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(prescriptionId) &&
+                         isValidPrescription(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().appointmentId == existing().appointmentId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'adviceEn', 'adviceBn', 'recommendedTests', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(prescriptionId);
+      }
+
+      // User-scoped Family Members Collection
+      match /family_members/{memberId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(memberId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(memberId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'fullName', 'relationEn', 'relationBn',
+                           'age', 'gender', 'bloodGroup', 'chronicConditions',
+                           'phone', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'fullName', 'relationEn', 'relationBn',
+                           'age', 'gender', 'bloodGroup', 'chronicConditions',
+                           'phone', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidFamilyMember(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(memberId) &&
+                         isValidFamilyMember(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'fullName', 'relationEn', 'relationBn', 'age', 'gender',
+                           'bloodGroup', 'chronicConditions', 'phone', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(memberId);
+      }
+
+      // User-scoped Instant Refund & MFS TrxID Recovery Claims Collection
+      match /refund_claims/{claimId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(claimId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(claimId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'appointmentId', 'doctorNameEn', 'doctorNameBn',
+                           'claimType', 'paymentMethod', 'originalTrxId', 'refundReferenceId',
+                           'refundAmountBdt', 'deductionFeeBdt', 'reasonSummary',
+                           'resolutionStatus', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'appointmentId', 'doctorNameEn', 'doctorNameBn',
+                           'claimType', 'paymentMethod', 'originalTrxId', 'refundReferenceId',
+                           'refundAmountBdt', 'deductionFeeBdt', 'reasonSummary',
+                           'resolutionStatus', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidRefundClaim(incoming());
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(claimId);
+      }
+    }
+  }
+}

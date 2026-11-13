@@ -1,0 +1,6 @@
+{
+  "name": "ShebaDoc",
+  "description": "Bilingual (Bangla & English) online doctor appointment, live chamber serial tracker, BMDC verified specialist booking, and digital e-prescription platform for Bangladesh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
