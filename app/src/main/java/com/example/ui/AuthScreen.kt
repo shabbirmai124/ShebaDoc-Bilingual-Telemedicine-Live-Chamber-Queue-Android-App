@@ -12,6 +12,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,6 +79,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -280,40 +283,43 @@ fun AuthScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_launcher_icon_fg_1794501392611),
+                        contentDescription = "ShebaDoc Logo",
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalHospital,
-                            contentDescription = "ShebaDoc Logo",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = tr(lang, "SHEBADOC BD", "সেবাডক বিডি"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onBackground,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = tr(
                                 lang,
-                                "BMDC Audit & Escrow-Protected Telemedicine",
-                                "বিএমডিসি অডিট ও ১০০% এসক্রো সুরক্ষিত টেলিমেডিসিন"
+                                "BMDC Audit & Escrow Telemedicine",
+                                "বিএমডিসি অডিট ও এসক্রো টেলিমেডিসিন"
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
@@ -444,7 +450,16 @@ fun AuthScreen(
                 border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_feature_auth_identity_bw_1794554557598),
+                        contentDescription = "Secure Patient Multi-Channel Authentication",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(115.dp)
+                    )
+                    Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = tr(
                             lang,
@@ -600,7 +615,7 @@ fun AuthScreen(
                                 text = if (selectedLoginMode == "PHONE_PASSWORD") {
                                     tr(
                                         lang,
-                                        "Login with Phone & Password (+ Google Cloud Sync)",
+                                        "Login with Phone & Password",
                                         "মোবাইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন"
                                     )
                                 } else {
@@ -611,7 +626,10 @@ fun AuthScreen(
                                     )
                                 },
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -669,12 +687,16 @@ fun AuthScreen(
                                 text = tr(
                                     lang,
                                     "Sign in with Google",
-                                    "Sign in with Google • গুগল দিয়ে লগইন করুন"
+                                    "গুগল দিয়ে লগইন করুন"
                                 ),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+                    }
                     }
                 }
             }
@@ -708,6 +730,48 @@ fun AuthScreen(
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val previewThumbs = listOf(
+                                R.drawable.img_feature_live_queue_bw_1794553993298 to tr(lang, "Live Queue", "লাইভ সিরিয়াল"),
+                                R.drawable.img_feature_telemedicine_sla_bw_1794553994283 to tr(lang, "10m SLA + Audio", "১০-মি. রুম"),
+                                R.drawable.img_feature_symptom_triage_bw_1794554557660 to tr(lang, "Vitals Triage", "ভাইটালস ও লক্ষণ"),
+                                R.drawable.img_feature_digital_rx_generic_bw_1794553993442 to tr(lang, "Digital Rx", "ডিজিটাল Rx"),
+                                R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221 to tr(lang, "TrxID Vault", "TrxID রিকভারি"),
+                                R.drawable.img_feature_bmdc_registry_bw_1794554558921 to tr(lang, "BMDC + Lab", "বিএমডিসি ও ল্যাব"),
+                                R.drawable.img_feature_family_health_bw_1794553995601 to tr(lang, "Family Care", "পরিবার সুরক্ষা")
+                            )
+                            previewThumbs.forEach { (resId, label) ->
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                                    modifier = Modifier.width(116.dp)
+                                ) {
+                                    Column {
+                                        Image(
+                                            painter = painterResource(id = resId),
+                                            contentDescription = label,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(64.dp)
+                                        )
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         val highlights = listOf(
                             tr(
                                 lang,

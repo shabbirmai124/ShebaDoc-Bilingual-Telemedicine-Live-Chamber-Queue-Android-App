@@ -5,6 +5,7 @@
 package com.example.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -51,11 +54,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.R
 import com.example.data.model.AppLanguage
 import com.example.data.model.Appointment
 import com.example.data.model.DoctorProfile
@@ -138,6 +146,16 @@ fun BookAppointmentDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_doctor_avatar_bw_1794503612377),
+                        contentDescription = tr(lang, doctor.nameEn, doctor.nameBn),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = tr(lang, "Instant Chamber Serial & Booking", "তাৎক্ষণিক চেম্বার সিরিয়াল ও বুকিং"),
@@ -486,11 +504,16 @@ fun BookAppointmentDialog(
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
+                            .height(52.dp)
                     ) {
-                        Text(tr(lang, "Cancel", "বাতিল"))
+                        Text(
+                            text = tr(lang, "Cancel", "বাতিল"),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                     Button(
                         enabled = canConfirmBooking,
@@ -509,22 +532,26 @@ fun BookAppointmentDialog(
                                 vitalsTempF
                             )
                         },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         modifier = Modifier
-                            .weight(1.6f)
-                            .height(50.dp)
+                            .weight(1.7f)
+                            .height(52.dp)
                             .testTag("confirm_booking_button")
                     ) {
                         Text(
                             text = tr(
                                 lang,
-                                "Confirm Serial #${doctor.nextAvailableSerial} • ${formatBdt(activeFee, lang)}",
-                                "সিরিয়াল #${doctor.nextAvailableSerial.formatForLang(lang)} নিশ্চিত করুন • ${formatBdt(activeFee, lang)}"
+                                "Confirm #${doctor.nextAvailableSerial} • ${formatBdt(activeFee, lang)}",
+                                "সিরিয়াল #${doctor.nextAvailableSerial.formatForLang(lang)} • ${formatBdt(activeFee, lang)}"
                             ),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -609,6 +636,19 @@ fun LiveConsultationRoomModal(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                // Monochrome Telemedicine SLA Illustration + Stage
+                Image(
+                    painter = painterResource(id = R.drawable.img_feature_telemedicine_sla_bw_1794553994283),
+                    contentDescription = "10-Min SLA Telemedicine Consultation Room",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(130.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
+                )
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Monochrome Simulated Video/Audio Stage
                 Surface(
@@ -721,6 +761,7 @@ fun LiveConsultationRoomModal(
 
                 Button(
                     onClick = onCompleteAndGetRx,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -733,7 +774,10 @@ fun LiveConsultationRoomModal(
                             "Complete Visit & Generate Bilingual Digital Rx",
                             "কনসালটেশন সম্পন্ন করুন ও বাংলা ই-প্রেসক্রিপশন নিন"
                         ),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -741,14 +785,18 @@ fun LiveConsultationRoomModal(
 
                 OutlinedButton(
                     onClick = onDoctorNoShowRefund,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = tr(
                             lang,
-                            "Doctor Absent / Disconnected → 100% Instant Escrow Refund",
+                            "Doctor Absent / Disconnected → 100% Instant Refund",
                             "ডাক্তার অনুপস্থিত / সংযোগ বিচ্ছিন্ন → ১০০% তাৎক্ষণিক রিফান্ড"
-                        )
+                        ),
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -803,6 +851,18 @@ fun StuckTrxIdRecoveryModal(
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221),
+                    contentDescription = "MFS Escrow Protection & TrxID Recovery",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(125.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
                 Text(
                     text = tr(
                         lang,
@@ -859,8 +919,16 @@ fun StuckTrxIdRecoveryModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                        Text(tr(lang, "Cancel", "বাতিল"))
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = tr(lang, "Cancel", "বাতিল"),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                     Button(
                         onClick = {
@@ -871,11 +939,16 @@ fun StuckTrxIdRecoveryModal(
                                 notes
                             )
                         },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                         modifier = Modifier
-                            .weight(1.5f)
+                            .weight(1.6f)
                             .testTag("verify_recover_trx_button")
                     ) {
-                        Text(tr(lang, "Instant 100% Recover", "তাৎক্ষণিক ১০০% রিকভার"))
+                        Text(
+                            text = tr(lang, "Instant 100% Recover", "তাৎক্ষণিক ১০০% রিকভার"),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
@@ -898,14 +971,17 @@ fun BmdcVerifyModal(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (doctor.isBmdcVerified) Icons.Default.Verified else Icons.Default.Security,
-                        contentDescription = "BMDC Status",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.img_doctor_avatar_bw_1794503612377),
+                        contentDescription = tr(lang, doctor.nameEn, doctor.nameBn),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = if (doctor.isBmdcVerified) {
                                 tr(lang, "BMDC Official Verified Record", "বিএমডিসি অফিশিয়াল যাচাইকৃত সনদ")
@@ -1004,6 +1080,17 @@ fun PrescriptionDetailModal(
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.img_feature_digital_rx_generic_bw_1794553993442),
+                    contentDescription = "Bilingual Digital E-Prescription & Generic Guide",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(115.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1217,6 +1304,17 @@ fun AddFamilyMemberModal(
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.img_feature_family_health_bw_1794553995601),
+                    contentDescription = "Family Health Profile",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = tr(lang, "Add Family Health Profile", "পরিবারের সদস্যের হেলথ প্রোফাইল যোগ করুন"),
                     style = MaterialTheme.typography.titleLarge,
@@ -1350,6 +1448,17 @@ fun UpdateVitalsModal(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.img_feature_symptom_triage_bw_1794554557660),
+                    contentDescription = "Pre-Visit Vitals Monitor",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.MedicalInformation,
