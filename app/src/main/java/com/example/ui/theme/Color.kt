@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Strict Monochrome Color Tokens (White, Black, Gray)
+ * Made by Md Shabbir Mia
+ */
 package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color

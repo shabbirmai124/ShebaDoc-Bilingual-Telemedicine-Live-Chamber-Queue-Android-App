@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Reactive State Management ViewModel
+ * Made by Md Shabbir Mia
+ */
 package com.example.ui
 
 import android.util.Log

@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Domain Models, Bilingual Engine & Bangladesh Specialist Catalog
+ * Made by Md Shabbir Mia
+ */
 package com.example.data.model
 
 import com.google.firebase.Timestamp

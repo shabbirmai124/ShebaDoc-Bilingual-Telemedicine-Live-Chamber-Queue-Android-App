@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Custom Typography Scale (Space Grotesk & Plus Jakarta Sans)
+ * Made by Md Shabbir Mia
+ */
 package com.example.ui.theme
 
 import androidx.compose.material3.Typography

@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Firestore Security & Error Telemetry Helper
+ * Made by Md Shabbir Mia
+ */
 package com.example.data.remote
 
 import android.util.Log

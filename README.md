@@ -1,5 +1,7 @@
 # ShebaDoc (সেবাডক) — Bangladesh Online Doctor Appointment & Telemedicine Platform
 
+> **Engineered & Created by:** **Md Shabbir Mia**
+
 **ShebaDoc (`সেবাডক`)** is a production-grade, bilingual (**বাংলা & English**) Android healthcare application built with **Kotlin**, **Jetpack Compose (Material 3)**, and **Firebase (Authentication + Cloud Firestore)**. Designed with an architectural **Monochrome (White, Black, and Gray)** high-contrast interface, ShebaDoc directly solves the most critical real-world failures reported by patients across Bangladesh telemedicine and hospital serial apps.
 
 ---

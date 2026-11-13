@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Main Patient Dashboard, Live Queue, Digital Rx & Protection Hub
+ * Made by Md Shabbir Mia
+ */
 package com.example.ui
 
 import androidx.activity.compose.BackHandler
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,6 +91,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -290,15 +296,22 @@ fun ShebaMainScreen(
                         tr(lang, "Queue (${activeQueueCount.formatForLang(lang)})", "সিরিয়াল (${activeQueueCount.formatForLang(lang)})"),
                         Icons.Default.AccessTime
                     ),
-                    Triple(2, tr(lang, "Rx & Fixes", "ওষুধ ও সমাধান"), Icons.Default.Description),
-                    Triple(3, tr(lang, "Protection", "সুরক্ষা ও পরিবার"), Icons.Default.FamilyRestroom)
+                    Triple(2, tr(lang, "Rx & Fixes", "Rx ও সমাধান"), Icons.Default.Description),
+                    Triple(3, tr(lang, "Protection", "সুরক্ষা"), Icons.Default.FamilyRestroom)
                 )
                 navItems.forEach { (index, label, icon) ->
                     NavigationBarItem(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
                         icon = { Icon(imageVector = icon, contentDescription = label) },
-                        label = { Text(text = label, maxLines = 1) },
+                        label = {
+                            Text(
+                                text = label,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.onPrimary,
                             selectedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -334,11 +347,17 @@ fun ShebaMainScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 760.dp)
+            ) {
             if (statusBanner != null) {
                 Surface(
                     color = MaterialTheme.colorScheme.primary,
@@ -431,6 +450,7 @@ fun ShebaMainScreen(
                     }
                 )
             }
+        }
         }
     }
 

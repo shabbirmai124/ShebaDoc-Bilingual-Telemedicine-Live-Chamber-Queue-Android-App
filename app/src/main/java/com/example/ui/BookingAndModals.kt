@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Booking Flow, Consultation SLA Room, TrxID Recovery & Registry Modals
+ * Made by Md Shabbir Mia
+ */
 package com.example.ui
 
 import androidx.compose.foundation.BorderStroke
@@ -106,6 +110,7 @@ fun BookAppointmentDialog(
     }
     var vitalsBp by remember { mutableStateOf("125/82 mmHg") }
     var vitalsTempF by remember { mutableStateOf("98.6 °F") }
+    var unverifiedAuditAcknowledged by remember { mutableStateOf(doctor.isBmdcVerified) }
 
     val activeFee = if (isFollowUp) doctor.followUpFeeBdt else doctor.newVisitFeeBdt
     val queueWaitMins = (doctor.nextAvailableSerial - doctor.currentRunningSerial).coerceAtLeast(1) * doctor.avgMinutesPerPatient
@@ -427,7 +432,53 @@ fun BookAppointmentDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                if (!doctor.isBmdcVerified) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                            .clickable { unverifiedAuditAcknowledged = !unverifiedAuditAcknowledged }
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = unverifiedAuditAcknowledged,
+                            onCheckedChange = { unverifiedAuditAcknowledged = it },
+                            modifier = Modifier.testTag("unverified_bmdc_ack_checkbox")
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = tr(
+                                    lang,
+                                    "⚠ BMDC Verification Pending / Flagged",
+                                    "⚠ বিএমডিসি সনদ এখনও যাচাই প্রক্রিয়াধীন"
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = tr(
+                                    lang,
+                                    "${doctor.bmdcWarningNoteEn} Tap to acknowledge before booking.",
+                                    "${doctor.bmdcWarningNoteBn} জেনে-বুঝে বুকিং করতে টিক দিন।"
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                val canConfirmBooking = patientName.isNotBlank() &&
+                    paymentTrxId.isNotBlank() &&
+                    (doctor.isBmdcVerified || unverifiedAuditAcknowledged)
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -442,6 +493,7 @@ fun BookAppointmentDialog(
                         Text(tr(lang, "Cancel", "বাতিল"))
                     }
                     Button(
+                        enabled = canConfirmBooking,
                         onClick = {
                             onConfirmBooking(
                                 patientName,

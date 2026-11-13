@@ -1,3 +1,7 @@
+/**
+ * ShebaDoc (সেবাডক) - Bangladesh Online Doctor Appointment & Telemedicine App
+ * Made by Md Shabbir Mia
+ */
 package com.example
 
 import android.os.Bundle
