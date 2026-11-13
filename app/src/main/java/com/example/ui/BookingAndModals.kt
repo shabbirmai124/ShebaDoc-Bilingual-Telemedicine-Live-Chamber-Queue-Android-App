@@ -80,6 +80,8 @@ fun BookAppointmentDialog(
     doctor: DoctorProfile,
     familyMembers: List<FamilyMember>,
     lang: AppLanguage,
+    isGuestMode: Boolean = false,
+    onRequestSignIn: () -> Unit = {},
     onDismiss: () -> Unit,
     onConfirmBooking: (
         patientName: String,
@@ -516,21 +518,25 @@ fun BookAppointmentDialog(
                         )
                     }
                     Button(
-                        enabled = canConfirmBooking,
+                        enabled = isGuestMode || canConfirmBooking,
                         onClick = {
-                            onConfirmBooking(
-                                patientName,
-                                patientRelation,
-                                selectedDate.substringBefore(" "),
-                                selectedSlot,
-                                consultationType,
-                                isFollowUp,
-                                paymentMethod,
-                                paymentTrxId,
-                                symptomsSummary,
-                                vitalsBp,
-                                vitalsTempF
-                            )
+                            if (isGuestMode) {
+                                onRequestSignIn()
+                            } else {
+                                onConfirmBooking(
+                                    patientName,
+                                    patientRelation,
+                                    selectedDate.substringBefore(" "),
+                                    selectedSlot,
+                                    consultationType,
+                                    isFollowUp,
+                                    paymentMethod,
+                                    paymentTrxId,
+                                    symptomsSummary,
+                                    vitalsBp,
+                                    vitalsTempF
+                                )
+                            }
                         },
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -543,11 +549,19 @@ fun BookAppointmentDialog(
                             .testTag("confirm_booking_button")
                     ) {
                         Text(
-                            text = tr(
-                                lang,
-                                "Confirm #${doctor.nextAvailableSerial} • ${formatBdt(activeFee, lang)}",
-                                "সিরিয়াল #${doctor.nextAvailableSerial.formatForLang(lang)} • ${formatBdt(activeFee, lang)}"
-                            ),
+                            text = if (isGuestMode) {
+                                tr(
+                                    lang,
+                                    "Sign In to Book #${doctor.nextAvailableSerial}",
+                                    "বুক করতে লগইন করুন (#${doctor.nextAvailableSerial.formatForLang(lang)})"
+                                )
+                            } else {
+                                tr(
+                                    lang,
+                                    "Confirm #${doctor.nextAvailableSerial} • ${formatBdt(activeFee, lang)}",
+                                    "সিরিয়াল #${doctor.nextAvailableSerial.formatForLang(lang)} • ${formatBdt(activeFee, lang)}"
+                                )
+                            },
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             maxLines = 2,
@@ -637,20 +651,7 @@ fun LiveConsultationRoomModal(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Monochrome Telemedicine SLA Illustration + Stage
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_telemedicine_sla_bw_1794553994283),
-                    contentDescription = "10-Min SLA Telemedicine Consultation Room",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Monochrome Simulated Video/Audio Stage
+                // Monochrome Video/Audio Stage
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.primary,
@@ -850,18 +851,7 @@ fun StuckTrxIdRecoveryModal(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221),
-                    contentDescription = "MFS Escrow Protection & TrxID Recovery",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(125.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = tr(
@@ -1080,17 +1070,6 @@ fun PrescriptionDetailModal(
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_digital_rx_generic_bw_1794553993442),
-                    contentDescription = "Bilingual Digital E-Prescription & Generic Guide",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(115.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
-                )
-                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1304,17 +1283,6 @@ fun AddFamilyMemberModal(
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_family_health_bw_1794553995601),
-                    contentDescription = "Family Health Profile",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(110.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
-                )
-                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = tr(lang, "Add Family Health Profile", "পরিবারের সদস্যের হেলথ প্রোফাইল যোগ করুন"),
                     style = MaterialTheme.typography.titleLarge,
@@ -1448,17 +1416,6 @@ fun UpdateVitalsModal(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_symptom_triage_bw_1794554557660),
-                    contentDescription = "Pre-Visit Vitals Monitor",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(110.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
-                )
-                Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.MedicalInformation,

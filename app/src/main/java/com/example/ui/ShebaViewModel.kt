@@ -35,7 +35,7 @@ sealed interface UiState<out T> {
 
 class ShebaViewModel(
     private val repository: ShebaRepository,
-    private val currentUserId: String
+    private val currentUserId: String?
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -56,73 +56,89 @@ class ShebaViewModel(
     private val _isBusy = MutableStateFlow(false)
     val isBusy: StateFlow<Boolean> = _isBusy.asStateFlow()
 
-    val appointmentsState: StateFlow<UiState<List<Appointment>>> = repository.observeAppointments(currentUserId)
-        .map<List<Appointment>, UiState<List<Appointment>>> { UiState.Success(it) }
-        .catch { error ->
-            val firestoreError = generateSequence(error) { it.cause }
-                .filterIsInstance<FirebaseFirestoreException>()
-                .firstOrNull()
-            if (firestoreError == null && error is CancellationException) throw error
-            val rootError = firestoreError ?: error
-            Log.w(TAG, "Error observing appointments", rootError)
-            emit(UiState.Error(rootError.message ?: "Failed to load appointments"))
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading
-        )
+    val appointmentsState: StateFlow<UiState<List<Appointment>>> = if (currentUserId == null) {
+        MutableStateFlow<UiState<List<Appointment>>>(UiState.Success(emptyList())).asStateFlow()
+    } else {
+        repository.observeAppointments(currentUserId)
+            .map<List<Appointment>, UiState<List<Appointment>>> { UiState.Success(it) }
+            .catch { error ->
+                val firestoreError = generateSequence(error) { it.cause }
+                    .filterIsInstance<FirebaseFirestoreException>()
+                    .firstOrNull()
+                if (firestoreError == null && error is CancellationException) throw error
+                val rootError = firestoreError ?: error
+                Log.w(TAG, "Error observing appointments", rootError)
+                emit(UiState.Error(rootError.message ?: "Failed to load appointments"))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue = UiState.Loading
+            )
+    }
 
-    val prescriptionsState: StateFlow<UiState<List<Prescription>>> = repository.observePrescriptions(currentUserId)
-        .map<List<Prescription>, UiState<List<Prescription>>> { UiState.Success(it) }
-        .catch { error ->
-            val firestoreError = generateSequence(error) { it.cause }
-                .filterIsInstance<FirebaseFirestoreException>()
-                .firstOrNull()
-            if (firestoreError == null && error is CancellationException) throw error
-            val rootError = firestoreError ?: error
-            Log.w(TAG, "Error observing prescriptions", rootError)
-            emit(UiState.Error(rootError.message ?: "Failed to load prescriptions"))
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading
-        )
+    val prescriptionsState: StateFlow<UiState<List<Prescription>>> = if (currentUserId == null) {
+        MutableStateFlow<UiState<List<Prescription>>>(UiState.Success(emptyList())).asStateFlow()
+    } else {
+        repository.observePrescriptions(currentUserId)
+            .map<List<Prescription>, UiState<List<Prescription>>> { UiState.Success(it) }
+            .catch { error ->
+                val firestoreError = generateSequence(error) { it.cause }
+                    .filterIsInstance<FirebaseFirestoreException>()
+                    .firstOrNull()
+                if (firestoreError == null && error is CancellationException) throw error
+                val rootError = firestoreError ?: error
+                Log.w(TAG, "Error observing prescriptions", rootError)
+                emit(UiState.Error(rootError.message ?: "Failed to load prescriptions"))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue = UiState.Loading
+            )
+    }
 
-    val familyMembersState: StateFlow<UiState<List<FamilyMember>>> = repository.observeFamilyMembers(currentUserId)
-        .map<List<FamilyMember>, UiState<List<FamilyMember>>> { UiState.Success(it) }
-        .catch { error ->
-            val firestoreError = generateSequence(error) { it.cause }
-                .filterIsInstance<FirebaseFirestoreException>()
-                .firstOrNull()
-            if (firestoreError == null && error is CancellationException) throw error
-            val rootError = firestoreError ?: error
-            Log.w(TAG, "Error observing family members", rootError)
-            emit(UiState.Error(rootError.message ?: "Failed to load family profiles"))
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading
-        )
+    val familyMembersState: StateFlow<UiState<List<FamilyMember>>> = if (currentUserId == null) {
+        MutableStateFlow<UiState<List<FamilyMember>>>(UiState.Success(emptyList())).asStateFlow()
+    } else {
+        repository.observeFamilyMembers(currentUserId)
+            .map<List<FamilyMember>, UiState<List<FamilyMember>>> { UiState.Success(it) }
+            .catch { error ->
+                val firestoreError = generateSequence(error) { it.cause }
+                    .filterIsInstance<FirebaseFirestoreException>()
+                    .firstOrNull()
+                if (firestoreError == null && error is CancellationException) throw error
+                val rootError = firestoreError ?: error
+                Log.w(TAG, "Error observing family members", rootError)
+                emit(UiState.Error(rootError.message ?: "Failed to load family profiles"))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue = UiState.Loading
+            )
+    }
 
-    val refundClaimsState: StateFlow<UiState<List<RefundClaim>>> = repository.observeRefundClaims(currentUserId)
-        .map<List<RefundClaim>, UiState<List<RefundClaim>>> { UiState.Success(it) }
-        .catch { error ->
-            val firestoreError = generateSequence(error) { it.cause }
-                .filterIsInstance<FirebaseFirestoreException>()
-                .firstOrNull()
-            if (firestoreError == null && error is CancellationException) throw error
-            val rootError = firestoreError ?: error
-            Log.w(TAG, "Error observing refund claims", rootError)
-            emit(UiState.Error(rootError.message ?: "Failed to load refund records"))
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading
-        )
+    val refundClaimsState: StateFlow<UiState<List<RefundClaim>>> = if (currentUserId == null) {
+        MutableStateFlow<UiState<List<RefundClaim>>>(UiState.Success(emptyList())).asStateFlow()
+    } else {
+        repository.observeRefundClaims(currentUserId)
+            .map<List<RefundClaim>, UiState<List<RefundClaim>>> { UiState.Success(it) }
+            .catch { error ->
+                val firestoreError = generateSequence(error) { it.cause }
+                    .filterIsInstance<FirebaseFirestoreException>()
+                    .firstOrNull()
+                if (firestoreError == null && error is CancellationException) throw error
+                val rootError = firestoreError ?: error
+                Log.w(TAG, "Error observing refund claims", rootError)
+                emit(UiState.Error(rootError.message ?: "Failed to load refund records"))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue = UiState.Loading
+            )
+    }
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query

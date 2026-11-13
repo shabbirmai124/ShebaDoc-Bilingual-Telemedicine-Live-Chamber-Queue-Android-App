@@ -59,10 +59,14 @@ fun ShebaAppRoot(
     onToggleTheme: () -> Unit
 ) {
     var currentUser by remember { mutableStateOf(Firebase.auth.currentUser) }
+    var isGuestMode by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         val listener = FirebaseAuth.AuthStateListener { auth ->
             currentUser = auth.currentUser
+            if (auth.currentUser != null) {
+                isGuestMode = false
+            }
         }
         Firebase.auth.addAuthStateListener(listener)
         onDispose {
@@ -71,24 +75,35 @@ fun ShebaAppRoot(
     }
 
     val user = currentUser
-    if (user == null) {
+    if (user == null && !isGuestMode) {
         AuthScreen(
             lang = lang,
             onToggleLanguage = onToggleLanguage,
             isDarkTheme = isDarkTheme,
             onToggleTheme = onToggleTheme,
-            onAuthSuccess = { currentUser = Firebase.auth.currentUser }
+            onAuthSuccess = {
+                isGuestMode = false
+                currentUser = Firebase.auth.currentUser
+            },
+            onContinueAsGuest = {
+                isGuestMode = true
+            }
         )
     } else {
-        val uid = user.uid
-        key(uid) {
+        val uid = user?.uid
+        key(uid ?: "guest_preview") {
             ShebaMainScreen(
                 currentUserId = uid,
+                isGuestMode = (user == null),
                 lang = lang,
                 onToggleLanguage = onToggleLanguage,
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme,
-                onSignedOut = { currentUser = null }
+                onRequestSignIn = { isGuestMode = false },
+                onSignedOut = {
+                    isGuestMode = false
+                    currentUser = null
+                }
             )
         }
     }

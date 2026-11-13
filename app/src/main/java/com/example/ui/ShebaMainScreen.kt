@@ -119,15 +119,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun ShebaMainScreen(
-    currentUserId: String,
+    currentUserId: String?,
+    isGuestMode: Boolean = false,
     lang: AppLanguage,
     onToggleLanguage: () -> Unit,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    onRequestSignIn: () -> Unit = {},
     onSignedOut: () -> Unit
 ) {
     val viewModel: ShebaViewModel = viewModel(
-        key = currentUserId,
+        key = currentUserId ?: "guest_preview",
         factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY]) {
@@ -163,9 +165,13 @@ fun ShebaMainScreen(
     var appointmentInConsultationRoom by remember { mutableStateOf<Appointment?>(null) }
     var showStuckTrxRecoveryModal by remember { mutableStateOf(false) }
 
-    if (selectedTab != 0) {
+    if (selectedTab != 0 || isGuestMode) {
         BackHandler {
-            selectedTab = 0
+            if (selectedTab != 0) {
+                selectedTab = 0
+            } else if (isGuestMode) {
+                onRequestSignIn()
+            }
         }
     }
 
@@ -263,22 +269,40 @@ fun ShebaMainScreen(
                             )
                         }
 
-                        IconButton(
-                            onClick = {
-                                signOut(
-                                    credentialManager = credentialManager,
-                                    scope = coroutineScope,
-                                    onSignOutComplete = onSignedOut
+                        if (isGuestMode) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .testTag("guest_sign_in_topbar_button")
+                                    .clickable { onRequestSignIn() }
+                            ) {
+                                Text(
+                                    text = tr(lang, "Sign In", "লগইন"),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                 )
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .testTag("sign_out_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = tr(lang, "Sign out", "সাইন আউট")
-                            )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    signOut(
+                                        credentialManager = credentialManager,
+                                        scope = coroutineScope,
+                                        onSignOutComplete = onSignedOut
+                                    )
+                                },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("sign_out_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = tr(lang, "Sign out", "সাইন আউট")
+                                )
+                            }
                         }
                     }
                 }
@@ -328,7 +352,7 @@ fun ShebaMainScreen(
             }
         },
         floatingActionButton = {
-            if (selectedTab == 3) {
+            if (selectedTab == 3 && !isGuestMode) {
                 FloatingActionButton(
                     onClick = { showAddFamilyModal = true },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -397,6 +421,7 @@ fun ShebaMainScreen(
             when (selectedTab) {
                 0 -> DoctorsAndTriageTab(
                     lang = lang,
+                    isGuestMode = isGuestMode,
                     searchQuery = searchQuery,
                     onSearchChange = viewModel::updateSearchQuery,
                     selectedCategory = selectedCategory,
@@ -406,16 +431,21 @@ fun ShebaMainScreen(
                     selectedTriage = selectedTriage,
                     onSelectTriage = viewModel::applySymptomTriage,
                     activeQueueCount = activeQueueCount,
+                    onRequestSignIn = onRequestSignIn,
                     onOpenQueueTab = { selectedTab = 1 },
                     onOpenFixesTab = { selectedTab = 2 },
-                    onOpenTrxRecovery = { showStuckTrxRecoveryModal = true },
+                    onOpenTrxRecovery = {
+                        if (isGuestMode) onRequestSignIn() else showStuckTrxRecoveryModal = true
+                    },
                     onBookDoctor = { doctorToBook = it },
                     onVerifyBmdc = { doctorToVerifyBmdc = it }
                 )
 
                 1 -> LiveSerialQueueTab(
                     lang = lang,
+                    isGuestMode = isGuestMode,
                     appointmentsState = appointmentsState,
+                    onRequestSignIn = onRequestSignIn,
                     onAdvanceSerial = { viewModel.advanceQueueSerial(it, lang) },
                     onUpdateVitals = { appointmentForVitals = it },
                     onOpenConsultationRoom = { appointmentInConsultationRoom = it },
@@ -432,15 +462,19 @@ fun ShebaMainScreen(
 
                 2 -> DigitalRxAndSolvedIssuesTab(
                     lang = lang,
+                    isGuestMode = isGuestMode,
                     prescriptionsState = prescriptionsState,
+                    onRequestSignIn = onRequestSignIn,
                     onOpenPrescription = { selectedPrescription = it },
                     onJumpToTab = { selectedTab = it }
                 )
 
                 3 -> ProtectionAndFamilyTab(
                     lang = lang,
+                    isGuestMode = isGuestMode,
                     refundClaimsState = refundClaimsState,
                     familyMembersState = familyMembersState,
+                    onRequestSignIn = onRequestSignIn,
                     onOpenTrxRecoveryModal = { showStuckTrxRecoveryModal = true },
                     onAddMemberClick = { showAddFamilyModal = true },
                     onDeleteMember = { viewModel.deleteFamilyMember(it, lang) },
@@ -462,6 +496,11 @@ fun ShebaMainScreen(
             doctor = doctorToBook!!,
             familyMembers = familyList,
             lang = lang,
+            isGuestMode = isGuestMode,
+            onRequestSignIn = {
+                doctorToBook = null
+                onRequestSignIn()
+            },
             onDismiss = { doctorToBook = null },
             onConfirmBooking = { patientName, relation, date, slot, mode, isFollowUp, payMethod, trxId, symptoms, bp, temp ->
                 val targetDoc = doctorToBook!!
@@ -562,6 +601,7 @@ fun ShebaMainScreen(
 @Composable
 private fun DoctorsAndTriageTab(
     lang: AppLanguage,
+    isGuestMode: Boolean,
     searchQuery: String,
     onSearchChange: (String) -> Unit,
     selectedCategory: String,
@@ -571,6 +611,7 @@ private fun DoctorsAndTriageTab(
     selectedTriage: com.example.data.model.SymptomTriageOption?,
     onSelectTriage: (com.example.data.model.SymptomTriageOption?) -> Unit,
     activeQueueCount: Int,
+    onRequestSignIn: () -> Unit,
     onOpenQueueTab: () -> Unit,
     onOpenFixesTab: () -> Unit,
     onOpenTrxRecovery: () -> Unit,
@@ -606,6 +647,58 @@ private fun DoctorsAndTriageTab(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier.fillMaxSize()
     ) {
+        if (isGuestMode) {
+            item {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = tr(
+                                    lang,
+                                    "Guest Exploration Mode Active",
+                                    "গেস্ট প্রিভিউ মোড চালু আছে"
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = tr(
+                                    lang,
+                                    "Explore all doctors, BMDC audits & solutions freely. Sign in to confirm serial bookings.",
+                                    "সকল ডাক্তার ও ফিচার দেখুন। সিরিয়াল বুক করতে লগইন করুন।"
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = onRequestSignIn,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.testTag("guest_banner_sign_in_button")
+                        ) {
+                            Text(
+                                text = tr(lang, "Sign In", "লগইন"),
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Editorial Monochrome Hero Banner + Play Store Review Protection Bar
         item {
             Card(
@@ -648,11 +741,19 @@ private fun DoctorsAndTriageTab(
 
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            text = tr(
-                                lang,
-                                "Active Serials: ${activeQueueCount.formatForLang(lang)} • Zero-Complaint Patient Protection",
-                                "সক্রিয় সিরিয়াল: ${activeQueueCount.formatForLang(lang)} টি • শতভাগ রোগী সুরক্ষা গ্যারান্টি"
-                            ),
+                            text = if (isGuestMode) {
+                                tr(
+                                    lang,
+                                    "7 Available Specialists • Zero-Complaint Patient Protection",
+                                    "৭ জন বিশেষজ্ঞ ডাক্তার • শতভাগ রোগী সুরক্ষা গ্যারান্টি"
+                                )
+                            } else {
+                                tr(
+                                    lang,
+                                    "Active Serials: ${activeQueueCount.formatForLang(lang)} • Zero-Complaint Patient Protection",
+                                    "সক্রিয় সিরিয়াল: ${activeQueueCount.formatForLang(lang)} টি • শতভাগ রোগী সুরক্ষা গ্যারান্টি"
+                                )
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -711,7 +812,7 @@ private fun DoctorsAndTriageTab(
             }
         }
 
-        // Visual Monochrome Feature Gallery Carousel (Every Core Feature Illustrated)
+        // Clean Icon-Driven Core Features Strip (No Excessive Images)
         item {
             Column {
                 Text(
@@ -730,72 +831,72 @@ private fun DoctorsAndTriageTab(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    val featureVisuals = listOf(
+                    val featureHighlights = listOf(
                         Triple(
-                            R.drawable.img_feature_live_queue_bw_1794553993298,
+                            Icons.Default.AccessTime,
                             tr(lang, "Live Serial Queue", "লাইভ চেম্বার সিরিয়াল"),
                             onOpenQueueTab
                         ),
                         Triple(
-                            R.drawable.img_feature_telemedicine_sla_bw_1794553994283,
-                            tr(lang, "10-Min SLA + 32kbps Audio", "১০-মি. রুম ও লো-ডাটা অডিও"),
+                            Icons.Default.VideoCall,
+                            tr(lang, "10-Min SLA + 32kbps", "১০-মি. রুম ও লো-ডাটা"),
                             onOpenQueueTab
                         ),
                         Triple(
-                            R.drawable.img_feature_symptom_triage_bw_1794554557660,
-                            tr(lang, "Symptom Triage & Vitals", "লক্ষণ ও প্রি-ভিজিট ভাইটালস"),
+                            Icons.Default.Verified,
+                            tr(lang, "BMDC Audit Filter", "বিএমডিসি অডিট ফিল্টার"),
                             onOpenFixesTab
                         ),
                         Triple(
-                            R.drawable.img_feature_bmdc_registry_bw_1794554558921,
-                            tr(lang, "BMDC Audit & 20% Lab", "বিএমডিসি অডিট ও ২০% ল্যাব"),
+                            Icons.Default.Description,
+                            tr(lang, "Digital Rx & Generics", "ডিজিটাল Rx ও জেনেরিক"),
                             onOpenFixesTab
                         ),
                         Triple(
-                            R.drawable.img_feature_digital_rx_generic_bw_1794553993442,
-                            tr(lang, "Digital Rx & Generic Prices", "ডিজিটাল Rx ও জেনেরিক দাম"),
-                            onOpenFixesTab
-                        ),
-                        Triple(
-                            R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221,
+                            Icons.Default.Security,
                             tr(lang, "৳0-Fee TrxID Escrow", "৳০ চার্জে TrxID রিফান্ড"),
                             onOpenTrxRecovery
                         ),
                         Triple(
-                            R.drawable.img_feature_family_health_bw_1794553995601,
+                            Icons.Default.FamilyRestroom,
                             tr(lang, "Family Health Profiles", "পরিবারের হেলথ প্রোফাইল"),
-                            onOpenFixesTab
-                        ),
-                        Triple(
-                            R.drawable.img_feature_auth_identity_bw_1794554557598,
-                            tr(lang, "Google & +880 Security", "গুগল ও +৮৮০ নিরাপত্তা"),
                             onOpenFixesTab
                         )
                     )
-                    featureVisuals.forEach { (imgRes, title, onClick) ->
+                    featureHighlights.forEach { (iconVec, title, onClick) ->
                         Card(
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                             modifier = Modifier
-                                .width(190.dp)
+                                .width(168.dp)
                                 .clickable { onClick() }
                         ) {
-                            Column {
-                                Image(
-                                    painter = painterResource(id = imgRes),
-                                    contentDescription = title,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(95.dp)
-                                )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = iconVec,
+                                            contentDescription = title,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = title,
                                     style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
@@ -831,17 +932,6 @@ private fun DoctorsAndTriageTab(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.img_feature_symptom_triage_bw_1794554557660),
-                    contentDescription = "Smart Symptom Triage & Pre-Visit Vitals",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(104.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
-                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier
@@ -1185,7 +1275,9 @@ private fun DoctorSpecialistCard(
 @Composable
 private fun LiveSerialQueueTab(
     lang: AppLanguage,
+    isGuestMode: Boolean,
     appointmentsState: UiState<List<Appointment>>,
+    onRequestSignIn: () -> Unit,
     onAdvanceSerial: (Appointment) -> Unit,
     onUpdateVitals: (Appointment) -> Unit,
     onOpenConsultationRoom: (Appointment) -> Unit,
@@ -1193,6 +1285,62 @@ private fun LiveSerialQueueTab(
     onInstantDoctorNoShowRefund: (Appointment) -> Unit,
     onExploreDoctors: () -> Unit
 ) {
+    if (isGuestMode) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccessTime,
+                contentDescription = "Live Serial Queue",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(56.dp)
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = tr(
+                    lang,
+                    "Live Chamber Serial Queue & 10-Min SLA Room",
+                    "লাইভ চেম্বার সিরিয়াল ও ১০-মিনিট কনসালটেশন রুম"
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = tr(
+                    lang,
+                    "Sign in with Google, Bangladesh Phone (+880), or Email to book a real chamber token, sync vitals ahead of time, switch to 32kbps audio, or claim an instant ৳0-fee refund.",
+                    "গুগল, মোবাইল নম্বর (+৮৮০) বা ইমেইল দিয়ে লগইন করে সিরিয়াল বুক করুন, লাইভ সিরিয়াল দেখুন অথবা ৳০ চার্জে তাৎক্ষণিক রিফান্ড নিন।"
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            Button(
+                onClick = onRequestSignIn,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("guest_queue_sign_in_button")
+            ) {
+                Text(tr(lang, "Sign In to Book & Track Serial", "সিরিয়াল বুক করতে লগইন করুন"))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onExploreDoctors,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(tr(lang, "Browse Available Doctors", "ডাক্তারদের তালিকা দেখুন"))
+            }
+        }
+        return
+    }
+
     when (appointmentsState) {
         is UiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -1221,15 +1369,11 @@ private fun LiveSerialQueueTab(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_live_queue_bw_1794553993298),
-                        contentDescription = "Live Chamber Serial Queue Illustration",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = "Live Serial Queue",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(52.dp)
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(
@@ -1263,7 +1407,7 @@ private fun LiveSerialQueueTab(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Escrow Guarantee Header + Live Queue Visual
+                    // Escrow Guarantee Header
                     item {
                         Card(
                             shape = RoundedCornerShape(16.dp),
@@ -1271,19 +1415,10 @@ private fun LiveSerialQueueTab(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column {
-                                Image(
-                                    painter = painterResource(id = R.drawable.img_feature_live_queue_bw_1794553993298),
-                                    contentDescription = "Live Chamber Serial Tracker",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(120.dp)
-                                )
-                                Row(
-                                    modifier = Modifier.padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                     Icon(
                                         imageVector = Icons.Default.Security,
                                         contentDescription = null,
@@ -1311,7 +1446,6 @@ private fun LiveSerialQueueTab(
                                         )
                                     }
                                 }
-                            }
                         }
                     }
 
@@ -1543,7 +1677,9 @@ private fun LiveSerialQueueTab(
 @Composable
 private fun DigitalRxAndSolvedIssuesTab(
     lang: AppLanguage,
+    isGuestMode: Boolean,
     prescriptionsState: UiState<List<Prescription>>,
+    onRequestSignIn: () -> Unit,
     onOpenPrescription: (Prescription) -> Unit,
     onJumpToTab: (Int) -> Unit
 ) {
@@ -1571,44 +1707,24 @@ private fun DigitalRxAndSolvedIssuesTab(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_bmdc_registry_bw_1794554558921),
-                        contentDescription = "Bilingual Digital Rx & 20% Lab Voucher Vault",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                    )
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = tr(
-                                lang,
-                                "Bilingual Digital E-Prescription (Rx) Vault",
-                                "দ্বিভাষিক ডিজিটাল ই-প্রেসক্রিপশন (Rx) ভল্ট"
-                            ),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = tr(
-                                lang,
-                                "Clear Bangla & English dosage schedules (১+০+১), generic medicine names, and 20% lab discount coupons.",
-                                "স্পষ্ট বাংলা ও ইংরেজি সেবনবিধি (১+০+১), ওষুধের জেনেরিক নাম এবং ২০% ল্যাব ডিসকাউন্ট কুপন।"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            Text(
+                text = tr(
+                    lang,
+                    "Bilingual Digital E-Prescription (Rx) Vault",
+                    "দ্বিভাষিক ডিজিটাল ই-প্রেসক্রিপশন (Rx) ভল্ট"
+                ),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = tr(
+                    lang,
+                    "Clear Bangla & English dosage schedules (১+০+১), generic medicine names, and 20% lab discount coupons.",
+                    "স্পষ্ট বাংলা ও ইংরেজি সেবনবিধি (১+০+১), ওষুধের জেনেরিক নাম এবং ২০% ল্যাব ডিসকাউন্ট কুপন।"
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         if (prescriptions.isEmpty()) {
@@ -1621,24 +1737,46 @@ private fun DigitalRxAndSolvedIssuesTab(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = tr(
-                                lang,
-                                "No Digital Prescriptions Issued Yet",
-                                "এখনও কোনো ডিজিটাল প্রেসক্রিপশন তৈরি হয়নি"
-                            ),
+                            text = if (isGuestMode) {
+                                tr(
+                                    lang,
+                                    "Sign In to Unlock Cloud E-Prescriptions",
+                                    "ডিজিটাল প্রেসক্রিপশন ভল্ট দেখতে লগইন করুন"
+                                )
+                            } else {
+                                tr(
+                                    lang,
+                                    "No Digital Prescriptions Issued Yet",
+                                    "এখনও কোনো ডিজিটাল প্রেসক্রিপশন তৈরি হয়নি"
+                                )
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = tr(
-                                lang,
-                                "Book an appointment and tap 'Complete & Get Rx' in the Queue tab to generate a permanent bilingual prescription.",
-                                "যেকোনো ডাক্তারের সিরিয়াল নিয়ে 'সিরিয়াল' ট্যাবে গিয়ে 'সম্পন্ন ও Rx নিন' বাটনে চাপলেই ডিজিটাল প্রেসক্রিপশন তৈরি হবে।"
-                            ),
+                            text = if (isGuestMode) {
+                                tr(
+                                    lang,
+                                    "Sign in to access saved prescriptions and 20% lab vouchers. Below, you can browse the DGDA Generic Medicine Comparator and all 6 Solved Patient Issues as a guest.",
+                                    "লগইন করলে আপনার প্রেসক্রিপশন ও ২০% ল্যাব কুপন পাবেন। নিচে গেস্ট হিসেবেই জেনেরিক ওষুধের দাম এবং ৬টি সমাধান দেখতে পারেন।"
+                                )
+                            } else {
+                                tr(
+                                    lang,
+                                    "Book an appointment and tap 'Complete & Get Rx' in the Queue tab to generate a permanent bilingual prescription.",
+                                    "যেকোনো ডাক্তারের সিরিয়াল নিয়ে 'সিরিয়াল' ট্যাবে গিয়ে 'সম্পন্ন ও Rx নিন' বাটনে চাপলেই ডিজিটাল প্রেসক্রিপশন তৈরি হবে।"
+                                )
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (isGuestMode) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedButton(onClick = onRequestSignIn) {
+                                Text(tr(lang, "Sign In Now", "এখনই লগইন করুন"))
+                            }
+                        }
                     }
                 }
             }
@@ -1702,44 +1840,24 @@ private fun DigitalRxAndSolvedIssuesTab(
         // Section 2: DGDA Generic Medicine Price & Brand Alternative Comparator
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_digital_rx_generic_bw_1794553993442),
-                        contentDescription = "DGDA Generic Medicine Price Comparator",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                    )
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = tr(
-                                lang,
-                                "DGDA Generic Medicine Price & Brand Finder",
-                                "ডিজিডিএ জেনেরিক ওষুধের দাম ও বিকল্প ব্র্যান্ড তুলনা"
-                            ),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = tr(
-                                lang,
-                                "Solves Pharmacy Overcharging & Stockouts: Find approved Square, Incepta, Beximco & Renata equivalents at official unit prices.",
-                                "ফার্মেসিতে নির্দিষ্ট ব্র্যান্ড না পেলে বা অতিরিক্ত দাম চাইলে অনুমোদিত স্কয়ার, ইনসেপ্টা, বেক্সিমকো ও রেনাটার বিকল্প ব্র্যান্ড ও সঠিক মূল্য দেখুন।"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            Text(
+                text = tr(
+                    lang,
+                    "DGDA Generic Medicine Price & Brand Finder",
+                    "ডিজিডিএ জেনেরিক ওষুধের দাম ও বিকল্প ব্র্যান্ড তুলনা"
+                ),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = tr(
+                    lang,
+                    "Solves Pharmacy Overcharging & Stockouts: Find approved Square, Incepta, Beximco & Renata equivalents at official unit prices.",
+                    "ফার্মেসিতে নির্দিষ্ট ব্র্যান্ড না পেলে বা অতিরিক্ত দাম চাইলে অনুমোদিত স্কয়ার, ইনসেপ্টা, বেক্সিমকো ও রেনাটার বিকল্প ব্র্যান্ড ও সঠিক মূল্য দেখুন।"
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = genericSearchQuery,
@@ -1811,120 +1929,82 @@ private fun DigitalRxAndSolvedIssuesTab(
             }
         }
 
-        // Section 3: 6 Real Online Review Complaints Analyzed & Solved + Visual Showcase
+        // Section 3: 6 Real Online Review Complaints Analyzed & Solved
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_bmdc_refund_shield_bw_1794503576748),
-                        contentDescription = "All Features & Solutions Visual Overview",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                    )
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = tr(
-                                lang,
-                                "Online Review Analysis: 6 Real User Complaints Solved",
-                                "অনলাইন রিভিউ বিশ্লেষণ: রোগীদের ৬টি প্রধান অভিযোগ ও সমাধান"
-                            ),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = tr(
-                                lang,
-                                "Engineered to eliminate every real failure reported across DocTime, Daktarbhai, Sebaghar & hospital chamber portals.",
-                                "ডকটাইম, ডাক্তারভাই, সেবাঘর ও হাসপাতালের অ্যাপ ব্যবহারকারীদের সকল বাস্তব ভোগান্তির স্থায়ী সমাধান।"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            Text(
+                text = tr(
+                    lang,
+                    "Online Review Analysis: 6 Real User Complaints Solved",
+                    "অনলাইন রিভিউ বিশ্লেষণ: রোগীদের ৬টি প্রধান অভিযোগ ও সমাধান"
+                ),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = tr(
+                    lang,
+                    "Engineered to eliminate every real failure reported across DocTime, Daktarbhai, Sebaghar & hospital chamber portals.",
+                    "ডকটাইম, ডাক্তারভাই, সেবাঘর ও হাসপাতালের অ্যাপ ব্যবহারকারীদের সকল বাস্তব ভোগান্তির স্থায়ী সমাধান।"
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         items(BangladeshMedicalCatalog.solvedPainPoints, key = { it.number }) { issue ->
-            val issueImageRes = when (issue.number) {
-                "01" -> R.drawable.img_bmdc_refund_shield_bw_1794503576748
-                "02" -> R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221
-                "03" -> R.drawable.img_feature_live_queue_bw_1794553993298
-                "04" -> R.drawable.img_feature_telemedicine_sla_bw_1794553994283
-                "05" -> R.drawable.img_feature_digital_rx_generic_bw_1794553993442
-                else -> R.drawable.img_feature_bmdc_registry_bw_1794554558921
-            }
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = issueImageRes),
-                        contentDescription = tr(lang, issue.solutionTitleEn, issue.solutionTitleBn),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(110.dp)
-                    )
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(
-                                    text = issue.number,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
                             Text(
-                                text = tr(lang, issue.appSourceTagEn, issue.appSourceTagBn),
+                                text = issue.number,
                                 style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = tr(lang, "Complaint: ${issue.problemTitleEn}", "অভিযোগ: ${issue.problemTitleBn}"),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = tr(lang, issue.appSourceTagEn, issue.appSourceTagBn),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = tr(lang, "Complaint: ${issue.problemTitleEn}", "অভিযোগ: ${issue.problemTitleBn}"),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = tr(lang, "ShebaDoc Fix: ${issue.solutionTitleEn}", "সেবাডক সমাধান: ${issue.solutionTitleBn}"),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = tr(lang, issue.detailEn, issue.detailBn),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(onClick = { onJumpToTab(issue.targetTab) }) {
                         Text(
-                            text = tr(lang, "ShebaDoc Fix: ${issue.solutionTitleEn}", "সেবাডক সমাধান: ${issue.solutionTitleBn}"),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = tr(lang, issue.actionLabelEn, issue.actionLabelBn),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = tr(lang, issue.detailEn, issue.detailBn),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedButton(onClick = { onJumpToTab(issue.targetTab) }) {
-                            Text(
-                                text = tr(lang, issue.actionLabelEn, issue.actionLabelBn),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
             }
@@ -1936,13 +2016,64 @@ private fun DigitalRxAndSolvedIssuesTab(
 @Composable
 private fun ProtectionAndFamilyTab(
     lang: AppLanguage,
+    isGuestMode: Boolean,
     refundClaimsState: UiState<List<RefundClaim>>,
     familyMembersState: UiState<List<FamilyMember>>,
+    onRequestSignIn: () -> Unit,
     onOpenTrxRecoveryModal: () -> Unit,
     onAddMemberClick: () -> Unit,
     onDeleteMember: (String) -> Unit,
     onSwitchAccountOrSignOut: () -> Unit
 ) {
+    if (isGuestMode) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Security,
+                contentDescription = "Escrow Protection & Family Health",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(56.dp)
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = tr(
+                    lang,
+                    "Family Health Profiles & ৳0-Fee Escrow Protection",
+                    "পারিবারিক হেলথ প্রোফাইল ও ৳০-চার্জ রিফান্ড সুরক্ষা"
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = tr(
+                    lang,
+                    "Sign in with Google, Bangladesh Phone (+880), or Email + Password to save family profiles (Father, Mother, Spouse, Child) and manage instant bKash/Nagad TrxID recoveries.",
+                    "গুগল, মোবাইল নম্বর (+৮৮০) অথবা ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করে পরিবারের হেলথ প্রোফাইল এবং বিকাশ/নগদ TrxID রিকভারি পরিচালনা করুন।"
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            Button(
+                onClick = onRequestSignIn,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("guest_protection_sign_in_button")
+            ) {
+                Text(tr(lang, "Sign In to Unlock Cloud Protection", "ক্লাউড সুরক্ষা চালু করতে লগইন করুন"))
+            }
+        }
+        return
+    }
+
     val claims = (refundClaimsState as? UiState.Success)?.data ?: emptyList()
     val members = (familyMembersState as? UiState.Success)?.data ?: emptyList()
 
@@ -1964,16 +2095,7 @@ private fun ProtectionAndFamilyTab(
                 border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_auth_identity_bw_1794554557598),
-                        contentDescription = "Multi-Channel Login Security & Google Cloud Sync",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp)
-                    )
-                    Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2090,7 +2212,6 @@ private fun ProtectionAndFamilyTab(
                             )
                         }
                     }
-                    }
                 }
             }
         }
@@ -2102,58 +2223,48 @@ private fun ProtectionAndFamilyTab(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221),
-                        contentDescription = "Zero-Deduction Refund & MFS Protection Hub",
-                        contentScale = ContentScale.Crop,
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = tr(
+                            lang,
+                            "ZERO-DEDUCTION REFUND & MFS PROTECTION HUB",
+                            "১০০% তাৎক্ষণিক রিফান্ড ও বিকাশ/নগদ সুরক্ষা কেন্দ্র"
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = tr(
+                            lang,
+                            "Unlike apps that take 5–14 working days and deduct bKash cash-out charges, ShebaDoc guarantees 0 BDT fee deduction and instant TrxID reconciliation.",
+                            "অন্যান্য অ্যাপে রিফান্ড পেতে ৫-১৪ দিন অপেক্ষা ও ক্যাশ-আউট চার্জ কাটা হলেও সেবাডকে আপনি পাচ্ছেন ৳০ চার্জ কর্তনে তাৎক্ষণিক রিফান্ড ও TrxID রিকভারি।"
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onOpenTrxRecoveryModal,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp)
-                    )
-                    Column(modifier = Modifier.padding(18.dp)) {
+                            .testTag("open_trx_recovery_modal_button")
+                    ) {
                         Text(
                             text = tr(
                                 lang,
-                                "ZERO-DEDUCTION REFUND & MFS PROTECTION HUB",
-                                "১০০% তাৎক্ষণিক রিফান্ড ও বিকাশ/নগদ সুরক্ষা কেন্দ্র"
+                                "Recover Stuck bKash / Nagad TrxID",
+                                "আটকে যাওয়া বিকাশ / নগদ TrxID রিকভার করুন"
                             ),
-                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = tr(
-                                lang,
-                                "Unlike apps that take 5–14 working days and deduct bKash cash-out charges, ShebaDoc guarantees 0 BDT fee deduction and instant TrxID reconciliation.",
-                                "অন্যান্য অ্যাপে রিফান্ড পেতে ৫-১৪ দিন অপেক্ষা ও ক্যাশ-আউট চার্জ কাটা হলেও সেবাডকে আপনি পাচ্ছেন ৳০ চার্জ কর্তনে তাৎক্ষণিক রিফান্ড ও TrxID রিকভারি।"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = onOpenTrxRecoveryModal,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("open_trx_recovery_modal_button")
-                        ) {
-                            Text(
-                                text = tr(
-                                    lang,
-                                    "Recover Stuck bKash / Nagad TrxID",
-                                    "আটকে যাওয়া বিকাশ / নগদ TrxID রিকভার করুন"
-                                ),
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
             }
@@ -2220,47 +2331,27 @@ private fun ProtectionAndFamilyTab(
             }
         }
 
-        // Section 2: Family Health Profiles Visual Banner
+        // Section 2: Family Health Profiles
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_family_health_bw_1794553995601),
-                        contentDescription = "Family Health Profiles Overview",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                    )
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = tr(
-                                lang,
-                                "Family Health Profiles (One-Tap Serial Booking)",
-                                "পরিবারের সদস্যদের হেলথ প্রোফাইল (এক ক্লিকে সিরিয়াল বুকিং)"
-                            ),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = tr(
-                                lang,
-                                "Book appointments for your elderly parents, spouse, or children without needing multiple phone numbers.",
-                                "আলাদা মোবাইল নম্বর ছাড়াই বাবা, মা, সন্তান বা জীবনসঙ্গীর জন্য দ্রুত ডাক্তারের সিরিয়াল নিন।"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            Text(
+                text = tr(
+                    lang,
+                    "Family Health Profiles (One-Tap Serial Booking)",
+                    "পরিবারের সদস্যদের হেলথ প্রোফাইল (এক ক্লিকে সিরিয়াল বুকিং)"
+                ),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = tr(
+                    lang,
+                    "Book appointments for your elderly parents, spouse, or children without needing multiple phone numbers.",
+                    "আলাদা মোবাইল নম্বর ছাড়াই বাবা, মা, সন্তান বা জীবনসঙ্গীর জন্য দ্রুত ডাক্তারের সিরিয়াল নিন।"
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         if (members.isEmpty()) {

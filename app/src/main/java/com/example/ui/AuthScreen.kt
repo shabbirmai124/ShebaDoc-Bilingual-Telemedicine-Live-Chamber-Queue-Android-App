@@ -214,7 +214,8 @@ fun AuthScreen(
     onToggleLanguage: () -> Unit,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    onAuthSuccess: () -> Unit
+    onAuthSuccess: () -> Unit,
+    onContinueAsGuest: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -443,6 +444,70 @@ fun AuthScreen(
                 }
             }
 
+            // Dedicated Guest Mode Card: Browse All Doctors & Features Without Signing In
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocalHospital,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = tr(
+                                lang,
+                                "Guest Preview • Explore Without Login",
+                                "গেস্ট প্রিভিউ • লগইন ছাড়াই সকল ফিচার দেখুন"
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = tr(
+                            lang,
+                            "Inspect all 7 specialists, BMDC audit status (5 verified, 2 unverified), symptom triage, DGDA generic medicine prices & 6 solved patient issues.",
+                            "লগইন ছাড়াই ৭ জন বিশেষজ্ঞ ডাক্তার, বিএমডিসি অডিট স্ট্যাটাস, লক্ষণ ট্রায়াজ, জেনেরিক ওষুধের দাম এবং ৬টি সমাধান দেখুন।"
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onContinueAsGuest,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .testTag("guest_browse_button")
+                    ) {
+                        Text(
+                            text = tr(
+                                lang,
+                                "Continue as Guest (See Doctors & Features)",
+                                "গেস্ট হিসেবে প্রবেশ করুন (ডাক্তার ও ফিচার দেখুন)"
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
             // Multi-Method Login Card: Google + Phone/Password + Email/Phone/Password
             Card(
                 shape = RoundedCornerShape(20.dp),
@@ -450,16 +515,7 @@ fun AuthScreen(
                 border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_feature_auth_identity_bw_1794554557598),
-                        contentDescription = "Secure Patient Multi-Channel Authentication",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(115.dp)
-                    )
-                    Column(modifier = Modifier.padding(18.dp)) {
+                Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = tr(
                             lang,
@@ -697,118 +753,65 @@ fun AuthScreen(
                             )
                         }
                     }
-                    }
                 }
             }
 
-            // Feature & Solutions Visual Banner Card
+            // Clean Typography Summary of 6 Real Issues Solved
             Card(
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.img_bmdc_refund_shield_bw_1794503576748),
-                        contentDescription = "BMDC Verification, Instant Refund & Digital Rx Solutions",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(145.dp)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = tr(
+                            lang,
+                            "6 Real Bangladesh Patient Issues Solved:",
+                            "রোগীদের ৬টি প্রধান সমস্যার শতভাগ সমাধান:"
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
                     )
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = tr(
-                                lang,
-                                "6 Real Bangladesh Patient Issues Solved:",
-                                "রোগীদের ৬টি প্রধান সমস্যার শতভাগ সমাধান:"
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                    val highlights = listOf(
+                        tr(
+                            lang,
+                            "1. 1-Tap Instant 100% Escrow Refund (৳0 Fee Deduction) if doctor is absent",
+                            "১. ডাক্তার না আসলে ১ ক্লিকে ৳০ চার্জ কর্তনে ১০০% তাৎক্ষণিক বিকাশ/নগদ রিফান্ড"
+                        ),
+                        tr(
+                            lang,
+                            "2. Stuck bKash/Nagad TrxID Self-Recovery Engine on network timeouts",
+                            "২. নেটওয়ার্ক সমস্যায় আটকে যাওয়া বিকাশ/নগদ TrxID অটো-রিকভারি"
+                        ),
+                        tr(
+                            lang,
+                            "3. Live Chamber Serial (#11 → #15) + Unverified BMDC Doctor Warning Filter",
+                            "৩. লাইভ চেম্বার সিরিয়াল (#১১ → #১৫) + আনভেরিফাইড বিএমডিসি ডাক্তার সতর্কবার্তা"
+                        ),
+                        tr(
+                            lang,
+                            "4. 10-Min SLA Room + 32kbps Low-Data Audio + DGDA Generic Medicine Price Finder",
+                            "৪. ১০-মিনিট কনসালটেশন রুম + ৩২kbps লো-ডাটা অডিও + জেনেরিক ওষুধের দাম তুলনা"
                         )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            val previewThumbs = listOf(
-                                R.drawable.img_feature_live_queue_bw_1794553993298 to tr(lang, "Live Queue", "লাইভ সিরিয়াল"),
-                                R.drawable.img_feature_telemedicine_sla_bw_1794553994283 to tr(lang, "10m SLA + Audio", "১০-মি. রুম"),
-                                R.drawable.img_feature_symptom_triage_bw_1794554557660 to tr(lang, "Vitals Triage", "ভাইটালস ও লক্ষণ"),
-                                R.drawable.img_feature_digital_rx_generic_bw_1794553993442 to tr(lang, "Digital Rx", "ডিজিটাল Rx"),
-                                R.drawable.img_feature_mfs_trx_recovery_bw_1794553995221 to tr(lang, "TrxID Vault", "TrxID রিকভারি"),
-                                R.drawable.img_feature_bmdc_registry_bw_1794554558921 to tr(lang, "BMDC + Lab", "বিএমডিসি ও ল্যাব"),
-                                R.drawable.img_feature_family_health_bw_1794553995601 to tr(lang, "Family Care", "পরিবার সুরক্ষা")
+                    )
+                    highlights.forEach { point ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
                             )
-                            previewThumbs.forEach { (resId, label) ->
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surface,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                                    modifier = Modifier.width(116.dp)
-                                ) {
-                                    Column {
-                                        Image(
-                                            painter = painterResource(id = resId),
-                                            contentDescription = label,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(64.dp)
-                                        )
-                                        Text(
-                                            text = label,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        val highlights = listOf(
-                            tr(
-                                lang,
-                                "1. 1-Tap Instant 100% Escrow Refund (৳0 Fee Deduction) if doctor is absent",
-                                "১. ডাক্তার না আসলে ১ ক্লিকে ৳০ চার্জ কর্তনে ১০০% তাৎক্ষণিক বিকাশ/নগদ রিফান্ড"
-                            ),
-                            tr(
-                                lang,
-                                "2. Stuck bKash/Nagad TrxID Self-Recovery Engine on network timeouts",
-                                "২. নেটওয়ার্ক সমস্যায় আটকে যাওয়া বিকাশ/নগদ TrxID অটো-রিকভারি"
-                            ),
-                            tr(
-                                lang,
-                                "3. Live Chamber Serial (#11 → #15) + Unverified BMDC Doctor Warning Filter",
-                                "৩. লাইভ চেম্বার সিরিয়াল (#১১ → #১৫) + আনভেরিফাইড বিএমডিসি ডাক্তার সতর্কবার্তা"
-                            ),
-                            tr(
-                                lang,
-                                "4. 10-Min SLA Room + 32kbps Low-Data Audio + DGDA Generic Medicine Price Finder",
-                                "৪. ১০-মিনিট কনসালটেশন রুম + ৩২kbps লো-ডাটা অডিও + জেনেরিক ওষুধের দাম তুলনা"
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = point,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                        )
-                        highlights.forEach { point ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = point,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
                         }
                     }
                 }
