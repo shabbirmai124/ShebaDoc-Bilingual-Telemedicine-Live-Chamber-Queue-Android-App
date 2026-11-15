@@ -1,6 +1,8 @@
 /**
  * ShebaDoc (সেবাডক) - Multi-Channel Patient Authentication (Google, Phone + Password, Email)
- * Made by Md Shabbir Mia
+ * Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>. All Rights Reserved.
+ * Proprietary & Confidential: Unauthorized use, copying, modification, or distribution
+ * by anyone other than Md Shabbir Mia is strictly prohibited. See /LICENSE.
  */
 package com.example.ui
 
@@ -814,6 +816,38 @@ fun AuthScreen(
                             )
                         }
                     }
+                }
+            }
+
+            // Proprietary Ownership & License Footer Notice
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("auth_proprietary_license_card")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Proprietary License",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = tr(
+                            lang,
+                            "© 2026 Md Shabbir Mia • Proprietary License (All Rights Reserved). Exclusive rights belong solely to Md Shabbir Mia.",
+                            "© ২০২৬ মোঃ সাব্বির মিয়া • প্রোপ্রাইটারি লাইসেন্স (সর্বস্বত্ব সংরক্ষিত)। এই সফটওয়্যারের সম্পূর্ণ মালিকানা একমাত্র মোঃ সাব্বির মিয়ার।"
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

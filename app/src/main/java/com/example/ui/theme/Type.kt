@@ -1,7 +1,9 @@
 /**
  * ShebaDoc (সেবাডক) - Custom Typography Scale (Space Grotesk & Plus Jakarta Sans)
  * Tuned for Crisp Bangla (বাংলা) & English Screen-Fit Readability
- * Made by Md Shabbir Mia
+ * Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>. All Rights Reserved.
+ * Proprietary & Confidential: Unauthorized use, copying, modification, or distribution
+ * by anyone other than Md Shabbir Mia is strictly prohibited. See /LICENSE.
  */
 package com.example.ui.theme
 

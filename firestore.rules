@@ -1,3 +1,6 @@
+// ShebaDoc (সেবাডক) - Cloud Firestore Zero-Trust Security Rules
+// Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>. All Rights Reserved.
+// Proprietary & Confidential: Authorized exclusively for Md Shabbir Mia. See /LICENSE.
 rules_version = '2';
 
 service cloud.firestore {

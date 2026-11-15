@@ -1,3 +1,8 @@
+/**
+ * ShebaDoc (সেবাডক) - Firestore Security Rules Test Suite
+ * Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>. All Rights Reserved.
+ * Proprietary & Confidential: Authorized exclusively for Md Shabbir Mia. See /LICENSE.
+ */
 const {
   initializeTestEnvironment,
   assertFails,

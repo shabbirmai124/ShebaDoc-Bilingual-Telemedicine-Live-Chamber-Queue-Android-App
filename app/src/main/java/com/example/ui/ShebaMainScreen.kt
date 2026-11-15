@@ -1,6 +1,8 @@
 /**
  * ShebaDoc (সেবাডক) - Main Patient Dashboard, Live Queue, Digital Rx & Protection Hub
- * Made by Md Shabbir Mia
+ * Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>. All Rights Reserved.
+ * Proprietary & Confidential: Unauthorized use, copying, modification, or distribution
+ * by anyone other than Md Shabbir Mia is strictly prohibited. See /LICENSE.
  */
 package com.example.ui
 
@@ -2070,6 +2072,8 @@ private fun ProtectionAndFamilyTab(
             ) {
                 Text(tr(lang, "Sign In to Unlock Cloud Protection", "ক্লাউড সুরক্ষা চালু করতে লগইন করুন"))
             }
+            Spacer(modifier = Modifier.height(18.dp))
+            ProprietaryLicenseNoticeCard(lang = lang)
         }
         return
     }
@@ -2446,6 +2450,55 @@ private fun ProtectionAndFamilyTab(
                     }
                 }
             }
+        }
+
+        // Section 3: Proprietary Ownership & All Rights Reserved License
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            ProprietaryLicenseNoticeCard(lang = lang)
+        }
+    }
+}
+
+@Composable
+private fun ProprietaryLicenseNoticeCard(lang: AppLanguage) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("proprietary_license_card")
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = "Proprietary License",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = tr(
+                        lang,
+                        "Proprietary Software License • All Rights Reserved",
+                        "প্রোপ্রাইটারি সফটওয়্যার লাইসেন্স • সর্বস্বত্ব সংরক্ষিত"
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = tr(
+                    lang,
+                    "Copyright © 2026 Md Shabbir Mia (mdshabbirmia516@gmail.com). Nobody else may copy, use, modify, distribute, or sell this source code or application without explicit signed written permission from Md Shabbir Mia.",
+                    "কপিরাইট © ২০২৬ মোঃ সাব্বির মিয়া (mdshabbirmia516@gmail.com)। লেখকের লিখিত অনুমতি ছাড়া অন্য কেউ এই কোড বা অ্যাপ্লিকেশন ব্যবহার, কপি, পরিবর্তন বা বিক্রয় করতে পারবেন না।"
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

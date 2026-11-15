@@ -1,6 +1,7 @@
 # ShebaDoc (সেবাডক) — Bangladesh Online Doctor Appointment & Telemedicine Platform
 
-> **Engineered & Created by:** **Md Shabbir Mia**
+> **Copyright © 2026 Md Shabbir Mia (`mdshabbirmia516@gmail.com`). All Rights Reserved.**  
+> **License:** **Proprietary & Confidential (`All Rights Reserved`)** — Exclusive rights belong solely to **Md Shabbir Mia**. Nobody else may use, copy, modify, publish, distribute, sell, or sublicense this code without explicit prior written permission. See [`LICENSE`](LICENSE).
 
 ![ShebaDoc Chamber & Telemedicine Hero](readme_images/01_shebadoc_telemedicine_hero.jpg)
 
@@ -81,3 +82,17 @@ We analyzed user reviews and patient complaints across major Bangladesh healthca
 
 - **Tier 1 Firestore Rules Tests (`firestore.test.js`)**: Validates schema enforcement, owner isolation, and zero-deduction refund rules against the local Firestore Emulator.
 - **Tier 2 Kotlin Robolectric Tests (`ShebaRepositoryRuleTest.kt`)**: Validates end-to-end repository operations (`bookAppointment`, `triggerDoctorNoShowInstantRefund`, `reconcileStuckMfsTransaction`, cross-user `PERMISSION_DENIED`, and unauthenticated access rejection).
+
+---
+
+## 4. Proprietary License & Copyright Notice
+
+```text
+Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>
+All Rights Reserved — Proprietary Software License
+```
+
+- **Exclusive Owner:** **Md Shabbir Mia** (`mdshabbirmia516@gmail.com`)
+- **Restrictions:** No other individual, team, or organization is permitted to use, copy, modify, merge, publish, distribute, sublicense, sell, or deploy any part of this codebase, Firestore rules, documentation, or design assets without a written commercial license signed by **Md Shabbir Mia**.
+- See the full legal text in [`LICENSE`](LICENSE).
+

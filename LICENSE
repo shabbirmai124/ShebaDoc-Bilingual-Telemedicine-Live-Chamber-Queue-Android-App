@@ -1,0 +1,40 @@
+PROPRIETARY SOFTWARE LICENSE — ALL RIGHTS RESERVED
+
+Copyright (c) 2026 Md Shabbir Mia <mdshabbirmia516@gmail.com>
+Project: ShebaDoc (সেবাডক) — Bangladesh Online Doctor Appointment & Telemedicine Platform
+All Rights Reserved.
+
+1. EXCLUSIVE OWNERSHIP
+This software, including all source code, Kotlin/Jetpack Compose files, XML/Gradle
+configurations, Firestore security rules, test suites, documentation, UI/UX layouts,
+business logic, algorithms, and bundled visual assets (collectively, the "Software"),
+is the sole and exclusive intellectual property of Md Shabbir Mia.
+
+2. STRICT PROHIBITION ON UNAUTHORIZED USE
+Except for Md Shabbir Mia, NO person, company, organization, or automated system
+is granted any right or license to:
+  (a) use, execute, host, deploy, or operate the Software or any portion thereof;
+  (b) copy, reproduce, clone, mirror, or archive the Software;
+  (c) modify, adapt, translate, reverse-engineer, decompile, or create derivative works;
+  (d) distribute, publish, share, transfer, lease, rent, sell, or sublicense the Software,
+      either in source or compiled binary (APK/AAB) form, whether for commercial or
+      non-commercial purposes.
+
+3. NO IMPLIED LICENSE
+Viewing or accessing this repository or its files does NOT grant any express,
+implied, or statutory license under any copyright, patent, trademark, or trade secret
+of Md Shabbir Mia. Any unauthorized use, reproduction, or distribution constitutes
+copyright infringement and a violation of applicable intellectual property laws.
+
+4. AUTHORIZED LICENSING & COMMERCIAL INQUIRIES
+All rights remain strictly reserved with the sole author and copyright holder:
+  Owner : Md Shabbir Mia
+  Email : mdshabbirmia516@gmail.com
+
+Written permission signed explicitly by Md Shabbir Mia is required prior to any
+use, commercial deployment, transfer of rights, or redistribution.
+
+5. DISCLAIMER
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT
+WARRANTY OF ANY KIND. IN NO EVENT SHALL MD SHABBIR MIA BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY ARISING FROM UNAUTHORIZED USE OF THE SOFTWARE.
